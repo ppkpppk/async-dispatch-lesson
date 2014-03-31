@@ -34,95 +34,226 @@
 
   <slide>
     <hgroup>
-      <h2>Slide with Bullets</h2>
-    </hgroup>
-    <article>
-      <ul>
-        <li>Titles are formatted as Open Sans with bold applied and font size is set at 45</li>
-        <li>Title capitalization is title case
-          <ul>
-            <li>Subtitle capitalization is title case</li>
-          </ul>
-        </li>
-        <li>Subtitle capitalization is title case</li>
-        <li>Titles and subtitles should never have a period at the end</li>
-      </ul>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Slide with Bullets that Build</h2>
-      <h3>Subtitle Placeholder</h3>
-    </hgroup>
-    <article>
-      <p>A list where items build:</p>
-      <ul class="build">
-        <li>Pressing 'h' highlights code snippets</li>
-        <li>Pressing 'p' toggles speaker notes (if they're on the current slide)</li>
-        <li>Pressing 'f' toggles fullscreen viewing</li>
-        <li>Pressing 'w' toggles widescreen</li>
-        <li>Pressing 'o' toggles overview mode</li>
-        <li>Pressing 'ESC' toggles off these goodies</li>
-      </ul>
-      <p>Another list, but items fade as they build:</p>
-      <ul class="build fade">
-        <li>Hover over me!</li>
-        <li>Hover over me!</li>
-        <li>Hover over me!</li>
-      </ul>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Slide with (Smaller Font)</h2>
-    </hgroup>
-    <article class="smaller">
-      <ul>
-        <li>All <a href="http://google.com">links</a> open in new tabs.</li>
-        <li>To change that this, add <code>target="_self"</code> to the link.</li>
-      </ul>
-    </article>
-  </slide>
-
-  <slide hidden>
-    Hidden slides are left out of the presentation.
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Code Slide (with Subtitle Placeholder)</h2>
-      <h3>Subtitle Placeholder</h3>
+      <h2>Depend on async value</h2>
+      <h3>Unexpected</h3>
     </hgroup>
     <article class="smaller">
       <pre class="prettyprint" data-lang="javascript">
-&lt;script type='text/javascript'&gt;
-  // Say hello world until the user starts questioning
-  // the meaningfulness of their existence.
-  function helloWorld(world) {
-    <b>for (var i = 42; --i &gt;= 0;) {
-      alert('Hello ' + String(world));
-    }</b>
-  }
-&lt;/script&gt;
-</pre>
-    <p><button id="button1">Run</button></p>
-    <div class="console" style="height:150px"></div>
-    </article>
-  </slide>
-  <script>
-    $(document).ready(function () {
-      $('#button1').on('click', function () {
-        function foo (value) {
-          kendoConsole.log(value);
-        };
+  function foo (value) {
+    var returnValue;
+    <b>setTimeout(function (arg) {
+      returnValue = 'foo said:' + arg;
+      kendoConsole.log(returnValue);
+    }, 1000, value);</b>
+    return returnValue;
+  };
 
-        foo('start!');
-        setTimeout(foo, 2000, 'end!');
+  function bar (value) {
+    kendoConsole.log('bar said:' + value);
+  };
+
+  bar(foo('hello'));
+</pre>
+    <button id="button1" style="float:right;">RUN</button>
+    <div class="console" style="height:120px;"></div>
+    </article>
+    <script>
+      $(document).ready(function () {
+        $('#button1').on('click', function (event) {
+          function foo (value) {
+            var returnValue;
+            setTimeout(function (arg) {
+              returnValue = 'foo said:' + arg;
+              kendoConsole.log(returnValue, false, $(event.target).closest('slide'));
+            }, 1000, value);
+            return returnValue;
+          };
+
+          function bar (value) {
+            kendoConsole.log('bar said:' + value,  false, $(event.target).closest('slide'));
+          };
+
+          bar(foo('hello'));
+        });
       });
-    });
-  </script>
+    </script>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>Depend on async value</h2>
+      <h3>With Callback</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="javascript">
+  function foo (value, <b>callback</b>) {
+    setTimeout(function (arg, cb) {
+      var returnValue = 'foo said:' + arg;
+      kendoConsole.log(returnValue);
+      <b>cb(returnValue)</b>;
+    }, 1000, value, callback);
+  };
+
+  function bar (value) {
+    kendoConsole.log('bar said:' + value);
+  };
+
+  foo('hello', <b>bar</b>);
+</pre>
+    <button id="button2" style="float:right;">RUN</button>
+    <div class="console" style="height:150px;"></div>
+    </article>
+    <script>
+      $(document).ready(function () {
+        $('#button2').on('click', function (event) {
+          function foo (value, callback) {
+            setTimeout(function (arg, cb) {
+              var returnValue = 'foo said:' + arg;
+              kendoConsole.log(returnValue, false, $(event.target).closest('slide'));
+              cb(returnValue);
+            }, 1000, value, callback);
+          };
+
+          function bar (value) {
+            kendoConsole.log('bar said:' + value, false, $(event.target).closest('slide'));
+          };
+
+          foo('hello', bar);
+        });
+      });
+    </script>
+  </slide>
+
+  <slide>
+    <aside class="note">
+      <section>
+        <button id="button3">RUN</button>
+        <div class="console" style="height:150px;"></div>
+      </section>
+    </aside>
+    <hgroup>
+      <h2>Depend on async value</h2>
+      <h3>Multi Callback with $.Callbacks</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="javascript">
+  function foo (value, callbacks) {
+    setTimeout(function (arg, cb) {
+      var returnValue = 'foo said:' + arg;
+      kendoConsole.log(returnValue);
+      <b>cb.fire(returnValue);</b>
+    }, 1000, value, callbacks);
+  };
+
+  function bar (value) {
+    kendoConsole.log('bar said:' + value);
+  };
+
+  function baz (value) {
+    kendoConsole.log('baz said:' + value);
+  };
+
+  <b>var callbacks = $.Callbacks();
+  callbacks.add(bar);
+  callbacks.add(baz);</b>
+  foo('hello', callbacks);
+</pre>
+    </article>
+    <script>
+      $(document).ready(function () {
+        $('#button3').on('click', function (event) {
+          function foo (value, callback) {
+            setTimeout(function (arg, cb) {
+              var returnValue = 'foo said:' + arg;
+              kendoConsole.log(returnValue, false, $(event.target).closest('slide'));
+              cb.fire(returnValue);
+            }, 1000, value, callback);
+          };
+
+          function bar (value) {
+            kendoConsole.log('bar said:' + value, false, $(event.target).closest('slide'));
+            throw 'err';
+          };
+
+          function baz (value) {
+            kendoConsole.log('baz said:' + value, false, $(event.target).closest('slide'));
+          };
+
+          var callbacks = $.Callbacks();
+          callbacks.add(bar);
+          callbacks.add(baz);
+          foo('hello', callbacks);
+        });
+      });
+    </script>
+  </slide>
+
+  <slide>
+    <aside class="note">
+      <section>
+        <button id="button4">RUN</button>
+        <div class="console" style="height:150px;"></div>
+      </section>
+    </aside>
+    <hgroup>
+      <h2>Depend on async value</h2>
+      <h3>Pub/Sub</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="javascript">
+  var topics = {};
+
+  function Topic (id) {
+    var callbacks, method, topic = id && topics[id];
+    if (!topic) {
+      callbacks = $.Callbacks();
+      topic = {
+        publish: callbacks.fire,
+        subscribe: callbacks.add,
+        unsubscribe: callbacks.remove
+      };
+      if (id) {
+        topics[id] = topic;
+      }
+    }
+    return topic;
+  };
+
+  Topic('sayHello').subscribe(function (value) {kendoConsole.log('foo said:' + value);});
+  Topic('sayHello').subscribe(function (value) {kendoConsole.log('bar said:' + value);});
+  Topic('sayHello').publish('Hello world');
+</pre>
+    </article>
+    <script>
+      $(document).ready(function () {
+        $('#button4').on('click', function (event) {
+          var topics = {};
+ 
+          function Topic (id) {
+            var callbacks, method, topic = id && topics[id];
+           
+            if (!topic) {
+              callbacks = $.Callbacks();
+              topic = {
+                publish: callbacks.fire,
+                subscribe: callbacks.add,
+                unsubscribe: callbacks.remove
+              };
+              if (id) {
+                topics[id] = topic;
+              }
+            }
+            return topic;
+          };
+
+          Topic('sayHello').subscribe(function (value) {kendoConsole.log('foo said:' + value, false, $(event.target).closest('slide'));});
+          Topic('sayHello').subscribe(function (value) {kendoConsole.log('bar said:' + value, false, $(event.target).closest('slide'));});
+
+          Topic('sayHello').publish('Hello world');
+        });
+      });
+    </script>
+  </slide>
 
   <slide>
     <hgroup>
