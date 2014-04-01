@@ -475,26 +475,177 @@
   <slide>
     <hgroup>
       <h2>Promise</h2>
-      <h3>A pri</h3>
+      <h3>An async dispatch chain</h3>
     </hgroup>
-    <article>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="javascript">
+  function foo (arg) {
+    var value = arg;
+    kendoConsole.log(value);
+    <b>setTimeout(function (arg) {</b>
+      var value = arg + ' bar';
+      kendoConsole.log(value);
+      <b>setTimeout(function (arg) {</b>
+        kendoConsole.log(arg + ' baz');
+      }, 1000, value);
+    }, 1000, value);
+  }
+  $('button').on('click', function () {
+    foo('foo');
+  }); 
+</pre>     
       <button id="button8">Run</button>
-      
-      <div class="console" style="height:180px;"></div>
+      <div class="console" style="height:85px;"></div>
+    </article>
+    <script>
+      $(document).ready(function () {
+        function foo (arg) {
+          var value = arg;
+          kendoConsole.log(value, false, $('#button8').closest('slide'));
+          setTimeout(function (arg) {
+            var value = arg + ' bar';
+            kendoConsole.log(value, false, $('#button8').closest('slide'));
+            setTimeout(function (arg) {
+              kendoConsole.log(arg + ' baz', false, $('#button8').closest('slide'));
+            }, 1000, value);
+          }, 1000, value);
+        }
+
+        $('#button8').on('click', function () {
+          foo('foo');
+        });
+      });
+    </script>
+  </slide>
+
+  <slide>
+    <aside class="note">
+      <section>
+        <button id="button9">Run</button>
+        <div class="console" style="height:150px;"></div>
+      </section>
+    </aside>
+    <hgroup>
+      <h2>Promise</h2>
+      <h3>Return a deferred</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="javascript">
+  function foo (arg) {
+    <b>var deferred = $.Deferred()</b>, value = arg;
+    kendoConsole.log(value);
+    setTimeout(function (arg) {
+      <b>deferred.resolve(arg);</b>
+    }, 1000, value);
+    <b>return deferred;</b>
+  }
+  function bar (arg) {
+    var deferred = $.Deferred(), value = arg + ' bar';
+    kendoConsole.log(value);
+    setTimeout(function (arg) {
+      deferred.resolve(arg);
+    }, 1000, value);
+    return deferred;
+  }
+  $('button').on('click', function () {
+    <b>foo('foo').then(bar).done(function () {
+        kendoConsole.log('finish!');
+    });</b>
+  });
+</pre>     
+    </article>
+    <script>
+      $(document).ready(function () {
+        function foo (arg) {
+          var deferred = $.Deferred();
+          var value = arg;
+          kendoConsole.log(value, false, $('#button9').closest('slide'));
+          setTimeout(function (arg) {
+            deferred.resolve(arg);
+          }, 1000, value);
+          return deferred;
+        }
+
+        function bar (arg) {
+          var deferred = $.Deferred();
+          var value = arg + ' bar';
+          kendoConsole.log(value, false, $('#button9').closest('slide'));
+          setTimeout(function (arg) {
+            deferred.resolve(arg);
+          }, 1000, value);
+          return deferred;
+        }
+
+        $('#button9').on('click', function () {
+          foo('foo')
+            .then(bar)
+            .done(function () {
+              kendoConsole.log('finish!', false, $('#button9').closest('slide'));
+          });
+        });
+      });
+    </script>
+  </slide>
+
+  <slide>
+    <aside class="note">
+      <section>
+        <button id="button10-run">Run</button>
+        <button id="button10-continue">Continue</button>
+        <div class="console" style="height:150px;"></div>
+      </section>
+    </aside>
+    <hgroup>
+      <h2>Promise</h2>
+      <h3>Waiting for input</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="javascript">
+  function foo () {
+    var deferred = $.Deferred();
+    kendoConsole.log('foo');
+    return deferred;
+  }
+  function bar () {
+    kendoConsole.log('bar');
+  }
+  function baz () {
+    kendoConsole.log('baz');
+  }
+  var step;
+  $('#run').on('click', function () {<b>
+    step = foo();
+    step.then(bar).done(bar);</b>
+  });
+  $('#continue').on('click', function () {
+    if (step) {
+      <b>step.resolve();</b>
+    }
+  });
+</pre>     
     </article>
     <script>
       $(document).ready(function () {
         function foo () {
-          setTimeout(function (arg) {
-            setTimeout(function (arg) {
-              kendoConsole.log(arg + ' baz', false, $('#button8').closest('slide'));
-            }, 1000, arg + ' bar');
-          }, 1000, 'foo');
+          var deferred = $.Deferred();
+          kendoConsole.log('foo', false, $('#button10-run').closest('slide'));
+          return deferred;
         }
-
-
-        $('#button8').on('click', function () {
-          foo();
+        function bar () {
+          kendoConsole.log('bar', false, $('#button10-run').closest('slide'));
+        }
+        function baz () {
+          kendoConsole.log('baz', false, $('#button10-run').closest('slide'));
+        }
+        var step;
+        $('#button10-run').on('click', function () {
+          step = foo();
+          step.then(bar).done(bar);
+        });
+        $('#button10-continue').on('click', function () {
+          if (step) {
+            step.resolve();
+          }
         });
       });
     </script>
