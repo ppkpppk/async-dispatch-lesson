@@ -8,9 +8,10 @@
   <link rel="stylesheet" media="all" href="css/slide/default.css">
   <link rel="stylesheet" media="all" href="css/console.css">
   <base target="_blank">
+  <script src="js/jquery.min.js" type="text/javascript"></script>
+  <script src="js/kendo.all.min.js" type="text/javascript"></script>
+  <script src="js/console.js" type="text/javascript"></script>
   <script data-main="js/slides" src="js/require-1.0.8.min.js"></script>
-  <script src="js/jquery.js"></script>
-  <script src="js/console.js"></script>
 </head>
 <body style="opacity: 0">
 
@@ -34,7 +35,7 @@
 
   <slide>
     <hgroup>
-      <h2>Depend on async value</h2>
+      <h2>Callback</h2>
       <h3>Unexpected</h3>
     </hgroup>
     <article class="smaller">
@@ -81,7 +82,7 @@
 
   <slide>
     <hgroup>
-      <h2>Depend on async value</h2>
+      <h2>Callback</h2>
       <h3>With Callback</h3>
     </hgroup>
     <article class="smaller">
@@ -125,6 +126,58 @@
   </slide>
 
   <slide>
+    <hgroup>
+      <h2>Callback</h2>
+      <h3>Make callback optional</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="javascript">
+  function foo (value, callback) {
+    setTimeout(function (arg, cb) {
+      var returnValue = 'foo said:' + arg;
+      kendoConsole.log(returnValue);
+      <b>if (cb) {
+        cb(returnValue);
+      }</b>
+    }, 1000, value, callback);
+  };
+
+  function bar (value) {
+    kendoConsole.log('bar said:' + value);
+  };
+
+  foo('hello', bar);
+      </pre>
+    </article>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>Callback</h2>
+      <h3>Make sure the callback is a function</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="javascript">
+  function foo (value, callback) {
+    setTimeout(function (arg, cb) {
+      var returnValue = 'foo said:' + arg;
+      kendoConsole.log(returnValue);
+      if (cb && <b>typeof(cb) === 'function'</b>) {
+        cb(returnValue);
+      }
+    }, 1000, value, callback);
+  };
+
+  function bar (value) {
+    kendoConsole.log('bar said:' + value);
+  };
+
+  foo('hello', bar);
+      </pre>
+    </article>
+  </slide>
+
+  <slide>
     <aside class="note">
       <section>
         <button id="button3">RUN</button>
@@ -132,7 +185,7 @@
       </section>
     </aside>
     <hgroup>
-      <h2>Depend on async value</h2>
+      <h2>Callback</h2>
       <h3>Multi Callback with $.Callbacks</h3>
     </hgroup>
     <article class="smaller">
@@ -172,7 +225,6 @@
 
           function bar (value) {
             kendoConsole.log('bar said:' + value, false, $(event.target).closest('slide'));
-            throw 'err';
           };
 
           function baz (value) {
@@ -196,7 +248,7 @@
       </section>
     </aside>
     <hgroup>
-      <h2>Depend on async value</h2>
+      <h2>Callback</h2>
       <h3>Pub/Sub</h3>
     </hgroup>
     <article class="smaller">
@@ -204,7 +256,7 @@
   var topics = {};
 
   function Topic (id) {
-    var callbacks, method, topic = id && topics[id];
+    var callbacks, topic = id && topics[id];
     if (!topic) {
       callbacks = $.Callbacks();
       topic = {
@@ -230,7 +282,7 @@
           var topics = {};
  
           function Topic (id) {
-            var callbacks, method, topic = id && topics[id];
+            var callbacks, topic = id && topics[id];
            
             if (!topic) {
               callbacks = $.Callbacks();
@@ -257,96 +309,195 @@
 
   <slide>
     <hgroup>
-      <h2>Code Slide (Smaller Font)</h2>
+      <h2>EventEmitter</h2>
+      <h3>A typical sample with jQuery</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="html">
+  &lt;div style="border:1px dashed; background-color:cyan; text-align:center;"&gt;
+    Click me to goodbye
+  &lt;/div&gt;
+</pre>
+      <pre class="prettyprint" data-lang="javascript">
+  $('div').on('click', function (event) {
+    $(this).fadeOut( 2000 );
+  });
+</pre>
+    <div id="button5" style='border: 1px dashed;background-color:cyan;text-align:center;'>Click me to goodbye</div>
+    </article>
+    <script>
+      $(document).ready(function () {
+        $('#button5').on('click', function (event) {
+          $(this).fadeOut( 2000 );
+        });
+      });
+    </script>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>EventEmitter</h2>
+      <h3>MVVM - Event binded to DOM</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="html">
+  &lt;div id="example-mvvm"&gt;
+    &lt;button data-bind="events:{
+        click: listener, dblclick: listener, mouseover: listener, mouseout: listener
+      }"&gt;Button&lt;/button&gt;
+  &lt;/div&gt;
+</pre>
+      <pre class="prettyprint" data-lang="javascript">
+  var viewModel = new kendo.data.ObservableObject({
+    listener: function(e) {
+        kendoConsole.log("Event: " + e.type);
+    }
+  });
+
+  kendo.bind($("#example-mvvm"), viewModel);
+</pre>
+    <div id="example-mvvm">
+        <button data-bind="events:{ click: listener, dblclick: listener, mouseover: listener, mouseout: listener }">Button</button>
+    </div>
+    <div class="console" style="height:80px;"></div>
+    </article>
+    <script>
+      $(document).ready(function () {
+        var viewModel = new kendo.data.ObservableObject({
+          listener: function(e) {
+              kendoConsole.log("Event: " + e.type, false, $(e.target).closest('slide'));
+          }
+        });
+
+        kendo.bind($("#example-mvvm"), viewModel);
+      });
+    </script>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>EventEmitter</h2>
+      <h3>MVVM - Event of model</h3>
     </hgroup>
     <article class="smaller">
       <pre class="prettyprint" data-lang="javascript">
-// Say hello world until the user starts questioning
-// the meaningfulness of their existence.
-function helloWorld(world) {
-  for (var i = 42; --i &gt;= 0;) {
-    alert('Hello ' + String(world));
-  }
-}
+  var viewModel = new kendo.data.ObservableObject({
+    name : 'world',
+    shot : function () {
+      kendoConsole.log("Hello " + this.name);
+    }
+  });
+
+  viewModel.bind('change', function (e) {
+    kendoConsole.log("Event: " + e.field + ' changed');
+    viewModel.shot();
+  });
+
+  $('button').on('click', function () {
+    viewModel.set('name', $('input').val());
+  });
 </pre>
-<pre class="prettyprint" data-lang="css">
-&lt;style&gt;
-  p { color: pink }
-  b { color: blue }
-&lt;/style&gt;
-</pre>
-<pre class="prettyprint" data-lang="html">
-&lt;!DOCTYPE html>
-&lt;html>
-&lt;head>
-  &lt;title>My Awesome Page&lt;/title>
-&lt;/head>
-&lt;body>
-  &lt;p&gt;Hello world&lt;/p&gt;
-&lt;body>
-&lt;/html>
-</pre>
+    <input type="text" id="text6">
+    <button id="button6">Set Name</button>
+    
+    <div class="console" style="height:65px;"></div>
     </article>
+    <script>
+      $(document).ready(function () {
+        var viewModel = new kendo.data.ObservableObject({
+          name : 'world',
+          shot : function () {
+            kendoConsole.log("Hello " + this.name, false, $('#text6').closest('slide'));
+          }
+        });
+
+        viewModel.bind('change', function (e) {
+          kendoConsole.log("Event: " + e.field + ' changed', false, $('#text6').closest('slide'));
+          viewModel.shot();
+        });
+
+        $('#button6').on('click', function () {
+          viewModel.set('name', $('#text6').val());
+        });
+      });
+    </script>
   </slide>
 
   <slide>
-    <aside class="note">
-      <section>
-        <ul>
-          <li>Point I wanted to make #1</li>
-          <li>Point I wanted to make #2</li>
-          <li>Point I wanted to make #3</li>
-          <li>Example <a href="#">link</a> in notes.</li>
-        </ul>
-        <p><b>Remember to say this tag line!</b></p>
-      </section>
-    </aside>
     <hgroup>
-      <h2>Slide with Speaker Notes</h2>
+      <h2>EventEmitter</h2>
+      <h3>MVVM - Custom event</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="javascript">
+  var viewModel = new kendo.data.ObservableObject();
+
+  viewModel.bind('myEvent', function (e) {
+    kendoConsole.log('Event: myEvent Fired with arg: ' + kendo.stringify(e));
+  });
+
+  $('button').on('click', function () {
+    viewModel.trigger('myEvent', {name: $('input').val()});
+  });
+</pre>
+    <input type="text" id="text7">
+    <button id="button7">Set Name</button>
+    
+    <div class="console" style="height:180px;"></div>
+    </article>
+    <script>
+      $(document).ready(function () {
+        var viewModel = new kendo.data.ObservableObject();
+
+        viewModel.bind('myEvent', function (e) {
+          kendoConsole.log('Event: myEvent Fired with arg: ' + kendo.stringify(e), false, $('#text7').closest('slide'));
+        });
+
+        $('#button7').on('click', function () {
+          viewModel.trigger('myEvent', {name: $('#text7').val()});
+        });
+      });
+    </script>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>EventEmitter</h2>
+      <h3>MVC vs MVP vs MVVM</h3>
     </hgroup>
     <article>
-      <p>Press 'p' to toggle speaker notes.</p>
+      <div class="centered">
+        <img src="img/mvc_mvp_mvvm.png" alt="Description" title="Description">
+      </div>
     </article>
   </slide>
 
   <slide>
-    <aside class="note">
-      <section>
-        <ul>
-          <li>See this amazing link: <a href="http://www.google.com">link</a>.</li>
-        </ul>
-        <p><b>Remember to say this tag line!</b></p>
-      </section>
-    </aside>
     <hgroup>
-      <h2>Presenter Mode</h2>
+      <h2>Promise</h2>
+      <h3>A pri</h3>
     </hgroup>
     <article>
-      <p>Add <code><a href="?presentme=true" target="_self">?presentme=true</a></code> to the URL to enabled presenter mode.
-      This setting is sticky, meaning refreshing the page will persist presenter
-      mode.</p>
-      <p>Hit <code><a href="?presentme=false" target="_self">?presentme=false</a></code> to disable presenter mode.</p>
+      <button id="button8">Run</button>
+      
+      <div class="console" style="height:180px;"></div>
     </article>
-  </slide>
+    <script>
+      $(document).ready(function () {
+        function foo () {
+          setTimeout(function (arg) {
+            setTimeout(function (arg) {
+              kendoConsole.log(arg + ' baz', false, $('#button8').closest('slide'));
+            }, 1000, arg + ' bar');
+          }, 1000, 'foo');
+        }
 
-  <slide>
-    <hgroup>
-      <h2>Slide with Image</h2>
-    </hgroup>
-    <article>
-      <img src="images/chart.png" class="reflect" alt="Description" title="Description">
-      <footer class="source">source: place source information here</footer>
-    </article>
-  </slide>
 
-  <slide>
-    <hgroup>
-      <h2>Slide with Image (Centered horz/vert)</h2>
-    </hgroup>
-    <article class="flexbox vcenter">
-      <img src="images/barchart.png" alt="Description" title="Description">
-      <footer class="source">source: place source info here</footer>
-    </article>
+        $('#button8').on('click', function () {
+          foo();
+        });
+      });
+    </script>
   </slide>
 
   <slide>
