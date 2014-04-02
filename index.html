@@ -587,6 +587,55 @@
     </script>
   </slide>
 
+  <slide class="segue dark quote nobackground">
+    <article class="flexbox vleft auto-fadein">
+      <q>
+        I promise that I will give you a result —— done or fail in future and inform you at that moment.
+      </q>
+      <div class="author">What is a promise</div>
+    </article>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>Promise</h2>
+      <h3>In reality</h3>
+    </hgroup>
+    <article class="flexbox vcenter">
+      <span><img src="img/reality.jpg"></span>
+    </article>
+  </slide>
+
+  <slide>
+    <hgroup>
+      <h2>Promise</h2>
+      <h3>In code</h3>
+    </hgroup>
+    <article class="smaller">
+      <pre class="prettyprint" data-lang="javascript">
+        var deferred = {
+          state : 'pending', //['pending', 'resolved', 'rejected']
+          doneCallbacks : $.Callbacks(),
+          failCallbacks : $.Callbacks(),
+          done : function (func) {
+            doneCallbacks.add(func);
+          },
+          fail : function (func) {
+            failCallbacks.add(func);
+          },
+          resolve : function (arg) {
+            state = 'resolved';
+            doneCallbacks(arg);
+          },
+          reject : function (arg) {
+            state = 'rejected';
+            failCallbacks(arg);
+          }
+        }
+      </pre>
+    </article>
+  </slide>
+
   <slide>
     <aside class="note">
       <section>
@@ -615,7 +664,7 @@
   var step;
   $('#run').on('click', function () {<b>
     step = foo();
-    step.then(bar).done(bar);</b>
+    step.then(bar).done(baz);</b>
   });
   $('#continue').on('click', function () {
     if (step) {
@@ -640,7 +689,7 @@
         var step;
         $('#button10-run').on('click', function () {
           step = foo();
-          step.then(bar).done(bar);
+          step.then(bar).done(baz);
         });
         $('#button10-continue').on('click', function () {
           if (step) {
@@ -651,7 +700,7 @@
     </script>
   </slide>
 
-  <slide>
+    <slide>
     <hgroup>
       <h2>Table Option A</h2>
       <h3>Subtitle Placeholder</h3>
