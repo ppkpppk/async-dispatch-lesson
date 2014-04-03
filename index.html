@@ -375,11 +375,24 @@
   </slide>
 
   <slide>
+    <aside class="note">
+      <section>
+        <div id="example-mvvm2">
+          <input type="text" id="text6" data-bind="value: name">
+        </div>
+        <div class="console" style="height:65px;"></div>
+      </section>
+    </aside>
     <hgroup>
       <h2>EventEmitter</h2>
       <h3>MVVM - Event of model</h3>
     </hgroup>
     <article class="smaller">
+      <pre class="prettyprint" data-lang="html">
+  &lt;div id="example-mvvm"&gt;
+    &lt;input type="text" data-bind="value: name"&gt;
+  &lt;/div&gt;
+      </pre>
       <pre class="prettyprint" data-lang="javascript">
   var viewModel = new kendo.data.ObservableObject({
     name : 'world',
@@ -390,17 +403,11 @@
 
   viewModel.bind('change', function (e) {
     kendoConsole.log("Event: " + e.field + ' changed');
-    viewModel.shot();
+    this.shot();
   });
 
-  $('button').on('click', function () {
-    viewModel.set('name', $('input').val());
-  });
+  kendo.bind($('#example-mvvm'), viewModel);
 </pre>
-    <input type="text" id="text6">
-    <button id="button6">Set Name</button>
-    
-    <div class="console" style="height:65px;"></div>
     </article>
     <script>
       $(document).ready(function () {
@@ -413,12 +420,10 @@
 
         viewModel.bind('change', function (e) {
           kendoConsole.log("Event: " + e.field + ' changed', false, $('#text6').closest('slide'));
-          viewModel.shot();
+          this.shot();
         });
 
-        $('#button6').on('click', function () {
-          viewModel.set('name', $('#text6').val());
-        });
+        kendo.bind($('#example-mvvm2'), viewModel);
       });
     </script>
   </slide>
@@ -592,7 +597,6 @@
       <q>
         I promise that I will give you a result —— done or fail in future and inform you at that moment.
       </q>
-      <div class="author">What is a promise</div>
     </article>
   </slide>
 
@@ -625,11 +629,11 @@
           },
           resolve : function (arg) {
             state = 'resolved';
-            doneCallbacks(arg);
+            doneCallbacks.fire(arg);
           },
           reject : function (arg) {
             state = 'rejected';
-            failCallbacks(arg);
+            failCallbacks.fire(arg);
           }
         }
       </pre>
@@ -641,12 +645,13 @@
       <section>
         <button id="button10-run">Run</button>
         <button id="button10-continue">Continue</button>
+        <button id="button10-stop">Stop</button>
         <div class="console" style="height:150px;"></div>
       </section>
     </aside>
     <hgroup>
       <h2>Promise</h2>
-      <h3>Waiting for input</h3>
+      <h3>Flow controll</h3>
     </hgroup>
     <article class="smaller">
       <pre class="prettyprint" data-lang="javascript">
@@ -656,20 +661,23 @@
     return deferred;
   }
   function bar () {
-    kendoConsole.log('bar');
+    kendoConsole.log('done');
   }
   function baz () {
-    kendoConsole.log('baz');
+    kendoConsole.log('fail');
   }
-  var step;
+  var dfd;
   $('#run').on('click', function () {<b>
-    step = foo();
-    step.then(bar).done(baz);</b>
+    dfd = foo();
+    dfd.then(bar, baz);</b>
   });
   $('#continue').on('click', function () {
-    if (step) {
-      <b>step.resolve();</b>
-    }
+    if (dfd)
+      <b>dfd.resolve();</b>
+  });
+  $('#stop').on('click', function () {
+    if (dfd)
+      <b>dfd.reject();</b>
   });
 </pre>     
     </article>
@@ -681,182 +689,118 @@
           return deferred;
         }
         function bar () {
-          kendoConsole.log('bar', false, $('#button10-run').closest('slide'));
+          kendoConsole.log('done', false, $('#button10-run').closest('slide'));
         }
         function baz () {
-          kendoConsole.log('baz', false, $('#button10-run').closest('slide'));
+          kendoConsole.log('fail', false, $('#button10-run').closest('slide'));
         }
-        var step;
+        var dfd;
         $('#button10-run').on('click', function () {
-          step = foo();
-          step.then(bar).done(baz);
+          dfd = foo();
+          dfd.then(bar, baz);
         });
         $('#button10-continue').on('click', function () {
-          if (step) {
-            step.resolve();
-          }
+          if (dfd)
+            dfd.resolve();
+        });
+        $('#button10-stop').on('click', function () {
+          if (dfd)
+            dfd.reject();
         });
       });
     </script>
   </slide>
 
-    <slide>
+  <slide>
     <hgroup>
-      <h2>Table Option A</h2>
-      <h3>Subtitle Placeholder</h3>
+      <h2>Promise</h2>
+      <h3>then()</h3>
     </hgroup>
     <article>
       <table>
         <tr>
-          <th></th><th>Column 1</th><th>Column 2</th><th>Column 3</th><th>Column 4</th>
+          <th>Arguments</th><td>fnDone, fnFail</td>
         </tr>
         <tr>
-          <td>Row 1</td><td>placeholder</td><td class="highlight">placeholder</td><td>placeholder</td><td>placeholder</td>
+          <th>Return</th><td>A new deferred</td>
         </tr>
         <tr>
-          <td>Row 2</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 3</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 4</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 5</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
+          <th>Step</th>
+          <td>
+              <ul>
+                <li>Create a <span class="red">newDeferred</span> as return value.</li>
+                <li>If this.resolve() is called, execute fnDone and take the returned value as <span class="red">returned</span>.</li>
+                <li>If <span class="red">returned</span> is a deferred (or promise), make <span class="red">returned</span>.done(<span class="red">newDeferred</span>.resolve).
+              </ul>
+          </td>
         </tr>
       </table>
     </article>
   </slide>
 
   <slide>
+    <aside class="note">
+      <section>
+        <button id="button11">Run</button>
+        <div class="console" style="height:240px;"></div>
+      </section>
+    </aside>
     <hgroup>
-      <h2>Table Option A (Smaller Text)</h2>
-      <h3>Subtitle Placeholder</h3>
-    </hgroup>
-    <article class="smaller">
-      <table>
-        <tr>
-          <th></th><th>Column 1</th><th>Column 2</th><th>Column 3</th><th>Column 4</th>
-        </tr>
-        <tr>
-          <td>Row 1</td><td>placeholder</td><td class="highlight">placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 2</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 3</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 4</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <td>Row 5</td><td>placeholder</td><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-      </table>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Table Option B</h2>
-      <h3>Subtitle Placeholder</h3>
+      <h2>Promise</h2>
+      <h3>$.when()</h3>
     </hgroup>
     <article>
-      <table class="rows">
-        <tr>
-          <th>Header 1</th><td>placeholder</td><td class="highlight">placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <th>Header 2</th><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <th>Header 3</th><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <th>Header 4</th><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-        <tr>
-          <th>Header 5</th><td>placeholder</td><td>placeholder</td><td>placeholder</td>
-        </tr>
-      </table>
+      <pre class="prettyprint" data-lang="javascript">
+  var deferreds = new Array();
+  for (var i = 0; i++ &lt; 10;) {
+    deferreds.push((function (index) {
+      var deferred = $.Deferred();
+      var delay = Math.random() * 2000 + 1000;
+      setTimeout(function () {
+        kendoConsole.log(index + ' finished after ' + delay + ' ms.');
+        deferred.resolve();
+      }, delay);
+      return deferred;
+    })(i));
+  }
+  <b>$.when.apply($, deferreds)</b>.done(function() {
+    kendoConsole.log('All finished.');
+  });
+</pre>
     </article>
+    <script>
+      $(document).ready(function () {
+        $('#button11').on('click', function () {
+          var deferreds = new Array();
+          for (var i = 0; i++ < 10;) {
+            deferreds.push((function (index) {
+              var deferred = $.Deferred();
+              var delay = Math.random() * 2000 + 1000;
+              setTimeout(function () {
+                kendoConsole.log(index + ' finished after ' + delay + ' ms.', false, $('#button11').closest('slide'));
+                deferred.resolve();
+              }, delay);
+              return deferred;
+            })(i));
+          }
+          $.when.apply($, deferreds).done(function() {
+            kendoConsole.log('All finished.', false, $('#button11').closest('slide'));
+          });
+        });
+      });
+    </script>
   </slide>
 
-  <slide>
-    <hgroup>
-      <h2>Slide Styles</h2>
+  <slide class="quote dark nobackground">
+     <hgroup>
+      <h2 class="white">Promise</h2>
+      <h3>Type of Promise</h3>
     </hgroup>
-    <article class="smaller">
-      <div class="columns-2">
-        <ul>
-          <li class="red">class="red"</li>
-          <li class="red2">class="red2"</li>
-          <li class="red3">class="red3"</li>
-          <li class="blue">class="blue"</li>
-          <li class="blue2">class="blue2"</li>
-          <li class="blue3">class="blue3"</li>
-          <li class="green">class="green"</li>
-          <li class="green2">class="green2"</li>
-        </ul>
-        <ul>
-          <li class="green3">class="green3"</li>
-          <li class="yellow">class="yellow"</li>
-          <li class="yellow2">class="yellow2"</li>
-          <li class="yellow3">class="yellow3"</li>
-          <li class="gray">class="gray"</li>
-          <li class="gray2">class="gray2"</li>
-          <li class="gray3">class="gray3"</li>
-          <li class="gray4">class="gray4"</li>
-        </ul>
-      </div>
-      <div class="centered" style="margin-top:2em">
-        I am centered text with a <button>Button</button> and <button disabled>Disabled</button> button.
-      </div>
-    </article>
-  </slide>
-
-  <slide class="segue dark nobackground">
-    <aside class="gdbar"><img src="images/google_developers_icon_128.png"></aside>
-    <hgroup class="auto-fadein">
-      <h2>Segue Slide</h2>
-      <h3>Subtitle Placeholder</h3>
-    </hgroup>
-  </slide>
-
-  <slide class="fill nobackground" style="background-image: url(images/sky.jpg)">
-    <hgroup>
-      <h2 class="white">Full Image (with Optional Header)</h2>
-    </hgroup>
-    <footer class="source white">www.flickr.com/photos/25797459@N06/5438799763/</footer>
-  </slide>
-
-  <slide class="segue dark quote nobackground">
-    <aside class="gdbar right bottom"><img src="images/google_developers_icon_128.png"></aside>
-    <article class="flexbox vleft auto-fadein">
+    <article class="vleft auto-fadein smaller">
       <q>
-        This is an example of quote text.
+        This object provides a subset of the methods of the Deferred object (<span class="yellow">then, done, fail, always, pipe, and state</span>) to prevent users from changing the state of the Deferred.
       </q>
-      <div class="author">
-        Name<br>
-        Company
-      </div>
-    </article>
-  </slide>
-
-  <slide>
-    <hgroup>
-      <h2>Slide with Iframe</h2>
-    </hgroup>
-    <article>
-      <iframe data-src="http://www.google.com/doodle4google/resources/history.html"></iframe>
-    </article>
-  </slide>
-
-  <slide>
-    <article>
-      <iframe data-src="http://www.google.com/doodle4google/resources/history.html"></iframe>
+      <div class="author">jQuery</div>
     </article>
   </slide>
 
@@ -864,17 +808,10 @@
     <aside class="gdbar right"><img src="img/js_logo.png"></aside>
     <article class="flexbox vleft auto-fadein">
       <h2>&lt;Thank You!&gt;</h2>
-      <p>Important contact information goes here.</p>
     </article>
     <p class="auto-fadein" data-config-contact>
       <!-- populated from slide_config.json -->
     </p>
-  </slide>
-
-  <slide class="logoslide dark nobackground">
-    <article class="flexbox vcenter">
-      <span><img src="images/google_developers_logo_white.png"></span>
-    </article>
   </slide>
 
   <slide class="backdrop"></slide>
